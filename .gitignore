@@ -23,6 +23,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
 
 # Database
 *.db
@@ -42,6 +43,7 @@ frontend/dist/
 ml/dataset/*.csv
 ml/dataset/*.json
 ml/models/*.joblib
+!ml/models/secret_classifier.joblib
 !ml/models/.gitkeep
 
 # Temporary upload and scan dirs

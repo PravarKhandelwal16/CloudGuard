@@ -6,6 +6,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { NewScanPage } from './pages/NewScanPage';
 import { ScanDetailsPage } from './pages/ScanDetailsPage';
 import { ScanHistoryPage } from './pages/ScanHistoryPage';
+import { CloudSecurityPage } from './pages/CloudSecurityPage';
 
 function MainApp() {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ function MainApp() {
         {currentTab === 'overview' && (
           <OverviewPage
             onNavigateToNewScan={() => setCurrentTab('new-scan')}
+            onNavigateToCloudSecurity={() => setCurrentTab('cloud-security')}
             onSelectScan={handleSelectScan}
           />
         )}
@@ -62,6 +64,10 @@ function MainApp() {
             onNavigateToNewScan={() => setCurrentTab('new-scan')}
             onSelectScan={handleSelectScan}
           />
+        )}
+
+        {currentTab === 'cloud-security' && (
+          <CloudSecurityPage />
         )}
 
         {currentTab === 'details' && selectedScanId && (

@@ -28,6 +28,9 @@ def create_app(config_class=Config):
     from .routes.dashboard import dashboard_bp
     app.register_blueprint(dashboard_bp)
 
+    from .routes.cloud_security import cloud_security_bp
+    app.register_blueprint(cloud_security_bp)
+
     # Error handlers
     @app.errorhandler(413)
     def request_entity_too_large(error):

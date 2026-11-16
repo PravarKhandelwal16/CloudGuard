@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, AlertTriangle, FileCode, CheckCircle2, PlusCircle, ArrowRight, Clock, AlertOctagon } from 'lucide-react';
+import { Shield, AlertTriangle, FileCode, CheckCircle2, PlusCircle, ArrowRight, Clock, AlertOctagon, Cloud } from 'lucide-react';
 import { api } from '../api/client';
 import { ScoreGauge } from '../components/ScoreGauge';
 import { SeverityBadge } from '../components/SeverityBadge';
 
-export function OverviewPage({ onNavigateToNewScan, onSelectScan }) {
+export function OverviewPage({ onNavigateToNewScan, onNavigateToCloudSecurity, onSelectScan }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,10 +61,18 @@ export function OverviewPage({ onNavigateToNewScan, onSelectScan }) {
           <h1 className="page-title">Security Overview</h1>
           <p className="page-desc">Project health summary and credential detection metrics</p>
         </div>
-        <button className="primary-btn" onClick={onNavigateToNewScan}>
-          <PlusCircle size={18} />
-          <span>New Scan</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {onNavigateToCloudSecurity && (
+            <button className="secondary-btn" onClick={onNavigateToCloudSecurity}>
+              <Cloud size={16} color="#2563eb" />
+              <span>Cloud Auditor</span>
+            </button>
+          )}
+          <button className="primary-btn" onClick={onNavigateToNewScan}>
+            <PlusCircle size={18} />
+            <span>New Scan</span>
+          </button>
+        </div>
       </div>
 
       {/* 4 Summary Cards */}

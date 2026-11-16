@@ -1,0 +1,17 @@
+[Unit]
+Description=CloudGuard Security Application Backend (Gunicorn)
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/cloudguard
+Environment="PATH=/home/ubuntu/cloudguard/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/ubuntu/cloudguard/venv/bin/gunicorn --config /home/ubuntu/cloudguard/deployment/gunicorn.conf.py "backend.run:app"
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/cloudguard/stdout.log
+StandardError=append:/var/log/cloudguard/stderr.log
+
+[Install]
+WantedBy=multi-user.target

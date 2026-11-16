@@ -58,5 +58,23 @@ export const api = {
     apiRequest('/scans', { method: 'GET' }),
   getScan: (scanId) =>
     apiRequest(`/scans/${scanId}`, { method: 'GET' }),
+
+  // Cloud Security Auditor
+  connectCloudAccount: (accountData) =>
+    apiRequest('/cloud-security/connect', { method: 'POST', body: JSON.stringify(accountData) }),
+  testCloudConnection: (testData) =>
+    apiRequest('/cloud-security/test-connection', { method: 'POST', body: JSON.stringify(testData) }),
+  runCloudScan: (scanParams) =>
+    apiRequest('/cloud-security/scan', { method: 'POST', body: JSON.stringify(scanParams) }),
+  runCloudDemoScan: (region = 'ap-south-1') =>
+    apiRequest('/cloud-security/demo-scan', { method: 'POST', body: JSON.stringify({ region }) }),
+  getCloudScan: (scanId) =>
+    apiRequest(`/cloud-security/scan/${scanId}`, { method: 'GET' }),
+  listCloudHistory: () =>
+    apiRequest('/cloud-security/history', { method: 'GET' }),
+  getCloudFinding: (findingId) =>
+    apiRequest(`/cloud-security/findings/${findingId}`, { method: 'GET' }),
+  getCloudSummary: () =>
+    apiRequest('/cloud-security/summary', { method: 'GET' }),
 };
 

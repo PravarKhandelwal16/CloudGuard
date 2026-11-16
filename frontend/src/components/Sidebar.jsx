@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, LayoutDashboard, PlusCircle, History, LogOut, User } from 'lucide-react';
+import { Shield, LayoutDashboard, PlusCircle, History, LogOut, User, Cloud } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function Sidebar({ currentTab, setTab }) {
@@ -9,6 +9,7 @@ export function Sidebar({ currentTab, setTab }) {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'new-scan', label: 'New Scan', icon: PlusCircle },
     { id: 'history', label: 'Scan History', icon: History },
+    { id: 'cloud-security', label: 'Cloud Security', icon: Cloud },
   ];
 
   return (

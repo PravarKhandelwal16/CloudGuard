@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudGuard — 100% Free Tier Automated Single-Instance EC2 Deployment'
+
+Parameters:
+  UbuntuAmiId:
+    Description: 'Automatically fetches the latest official Ubuntu 22.04 LTS AMI for your current AWS region.'
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+
+  KeyPairName:
+    Description: 'Optional: Name of an existing EC2 KeyPair to enable SSH access. Leave empty if you will use EC2 Instance Connect.'
+    Type: String
+    Default: ''
+
+  InstanceType:
+    Description: 'EC2 Instance Type (Free-Tier eligible: t2.micro or t3.micro)'
+    Type: String
+    Default: 't2.micro'
+    AllowedValues:
+      - 't2.micro'
+      - 't3.micro'
+
+Conditions:
+  HasKeyPair: !Not [!Equals [!Ref KeyPairName, '']]
+
+Resources:
+  CloudGuardSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Allow HTTP web traffic and SSH access for CloudGuard'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: 'HTTP Web Access'
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: 'SSH Remote Administration'
+
+  CloudGuardInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/SecurityAudit'
+
+  CloudGuardInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - !Ref CloudGuardInstanceRole
+
+  CloudGuardInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref UbuntuAmiId
+      KeyName: !If [HasKeyPair, !Ref KeyPairName, !Ref 'AWS::NoValue']
+      IamInstanceProfile: !Ref CloudGuardInstanceProfile
+      SecurityGroupIds:
+        - !Ref CloudGuardSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: '/dev/sda1'
+          Ebs:
+            VolumeSize: 20
+            VolumeType: 'gp3'
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: 'CloudGuard-Free-Tier-Instance'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -e
+          export DEBIAN_FRONTEND=noninteractive
+
+          # Setup 2GB Swap space (Prevents OOM on 1GB RAM micro instances)
+          fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+          # Install packages
+          apt-get update -y
+          apt-get install -y python3 python3-pip python3-venv git nginx curl
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
+
+          # Clone CloudGuard
+          APP_DIR="/home/ubuntu/cloudguard"
+          git clone https://github.com/PravarKhandelwal16/CloudGuard.git "$APP_DIR"
+          chown -R ubuntu:ubuntu "$APP_DIR"
+          cd "$APP_DIR"
+
+          # Configure environment
+          FLASK_SECRET=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+          JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+          cat <<EOF > "$APP_DIR/.env"
+          FLASK_ENV=production
+          FLASK_SECRET_KEY=$FLASK_SECRET
+          JWT_SECRET_KEY=$JWT_SECRET
+          DATABASE_URL=sqlite:////home/ubuntu/cloudguard/cloudguard.db
+          STORAGE_BACKEND=local
+          AWS_REGION=${AWS::Region}
+          UPLOAD_MAX_MB=25
+          MAX_ARCHIVE_UNCOMPRESSED_MB=100
+          MAX_ARCHIVE_FILES=1000
+          ML_MODEL_PATH=/home/ubuntu/cloudguard/ml/models/secret_classifier.joblib
+          EOF
+          chown ubuntu:ubuntu "$APP_DIR/.env"
+          chmod 600 "$APP_DIR/.env"
+
+          # Python setup
+          sudo -u ubuntu python3 -m venv "$APP_DIR/venv"
+          sudo -u ubuntu "$APP_DIR/venv/bin/pip" install --upgrade pip
+          sudo -u ubuntu "$APP_DIR/venv/bin/pip" install -r "$APP_DIR/backend/requirements.txt"
+          sudo -u ubuntu "$APP_DIR/venv/bin/pip" install gunicorn
+
+          # Frontend build
+          cd "$APP_DIR/frontend"
+          sudo -u ubuntu npm install
+          sudo -u ubuntu npm run build
+          cd "$APP_DIR"
+
+          # Systemd & Nginx setup
+          mkdir -p /var/log/cloudguard
+          chown -R ubuntu:ubuntu /var/log/cloudguard
+          cp "$APP_DIR/deployment/cloudguard.service" /etc/systemd/system/cloudguard.service
+          systemctl daemon-reload
+          systemctl enable cloudguard
+          systemctl start cloudguard
+
+          cp "$APP_DIR/deployment/nginx.conf" /etc/nginx/sites-available/cloudguard
+          rm -f /etc/nginx/sites-enabled/default
+          ln -sf /etc/nginx/sites-available/cloudguard /etc/nginx/sites-enabled/cloudguard
+          nginx -t
+          systemctl restart nginx
+
+Outputs:
+  PublicIP:
+    Description: 'Public IP of the CloudGuard Free-Tier EC2 Instance'
+    Value: !GetAtt CloudGuardInstance.PublicIp
+
+  ApplicationURL:
+    Description: 'Direct Web Application URL (HTTP)'
+    Value: !Sub 'http://${CloudGuardInstance.PublicIp}'

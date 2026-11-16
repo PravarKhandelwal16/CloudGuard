@@ -1,0 +1,424 @@
+{
+  "scenario_metadata": {
+    "account_id": "123456789012",
+    "account_alias": "cloudguard-demo-env",
+    "region": "ap-south-1",
+    "role_arn": "arn:aws:iam::123456789012:role/CloudGuardAuditorRole",
+    "is_simulation": true,
+    "description": "Realistic enterprise multi-service AWS configuration with common misconfigurations and secure baselines"
+  },
+  "s3": {
+    "buckets": [
+      {
+        "Name": "cloudguard-customer-exports-prod",
+        "CreationDate": "2024-03-15T10:30:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": false,
+          "IgnorePublicAcls": false,
+          "BlockPublicPolicy": false,
+          "RestrictPublicBuckets": false
+        },
+        "PolicyStatus": {
+          "IsPublic": true
+        },
+        "Policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "PublicReadGetObject",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::cloudguard-customer-exports-prod/*"
+            }
+          ]
+        },
+        "Acl": {
+          "Grants": [
+            {
+              "Grantee": {
+                "Type": "Group",
+                "URI": "http://acs.amazonaws.com/groups/global/AllUsers"
+              },
+              "Permission": "READ"
+            }
+          ]
+        },
+        "Encryption": null
+      },
+      {
+        "Name": "cloudguard-internal-backups-2026",
+        "CreationDate": "2024-06-20T08:15:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": null,
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": null
+      },
+      {
+        "Name": "cloudguard-secure-logs-vault",
+        "CreationDate": "2024-01-10T12:00:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "EnforceTLSRequestsOnly",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                "arn:aws:s3:::cloudguard-secure-logs-vault",
+                "arn:aws:s3:::cloudguard-secure-logs-vault/*"
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        },
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": {
+          "ServerSideEncryptionConfiguration": {
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "aws:kms",
+                  "KMSMasterKeyId": "arn:aws:kms:ap-south-1:123456789012:key/b1234567-89ab-cdef-0123-456789abcdef"
+                },
+                "BucketKeyEnabled": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "iam": {
+    "users": [
+      {
+        "UserName": "developer-admin",
+        "UserId": "AIDA123456789EXAMPLE1",
+        "Arn": "arn:aws:iam::123456789012:user/developer-admin",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "AdministratorAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AdministratorAccess"
+          }
+        ],
+        "InlinePolicies": []
+      },
+      {
+        "UserName": "ci-runner-service",
+        "UserId": "AIDA123456789EXAMPLE2",
+        "Arn": "arn:aws:iam::123456789012:user/ci-runner-service",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "CloudGuardScopedBuildPolicy",
+            "PolicyArn": "arn:aws:iam::123456789012:policy/CloudGuardScopedBuildPolicy"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "roles": [
+      {
+        "RoleName": "LegacyDeployerRole",
+        "RoleId": "AROA123456789EXAMPLE1",
+        "Arn": "arn:aws:iam::123456789012:role/LegacyDeployerRole",
+        "AttachedPolicies": [],
+        "InlinePolicies": [
+          {
+            "PolicyName": "OverlyPermissiveInlineDeploy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "RoleName": "S3SyncWorkerRole",
+        "RoleId": "AROA123456789EXAMPLE2",
+        "Arn": "arn:aws:iam::123456789012:role/S3SyncWorkerRole",
+        "AttachedPolicies": [],
+        "InlinePolicies": [
+          {
+            "PolicyName": "WildcardS3SyncPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "RoleName": "CloudGuardAuditorReadOnlyRole",
+        "RoleId": "AROA123456789EXAMPLE3",
+        "Arn": "arn:aws:iam::123456789012:role/CloudGuardAuditorReadOnlyRole",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "SecurityAudit",
+            "PolicyArn": "arn:aws:iam::aws:policy/SecurityAudit"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "policies": [
+      {
+        "PolicyName": "AdministratorAccess",
+        "PolicyArn": "arn:aws:iam::aws:policy/AdministratorAccess",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        }
+      },
+      {
+        "PolicyName": "CloudGuardScopedBuildPolicy",
+        "PolicyArn": "arn:aws:iam::123456789012:policy/CloudGuardScopedBuildPolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": "arn:aws:s3:::cloudguard-build-artifacts/*"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "ec2": {
+    "security_groups": [
+      {
+        "GroupId": "sg-01ab23cd45ef01234",
+        "GroupName": "web-public-ingress-sg",
+        "Description": "Public facing web security group",
+        "VpcId": "vpc-0a1b2c3d4e5f60001",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "HTTP web access"
+              }
+            ],
+            "Ipv6Ranges": [
+              {
+                "CidrIpv6": "::/0",
+                "Description": "HTTP IPv6"
+              }
+            ]
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "Temporary remote administration SSH"
+              }
+            ],
+            "Ipv6Ranges": []
+          }
+        ]
+      },
+      {
+        "GroupId": "sg-0987654321fedcba0",
+        "GroupName": "windows-management-sg",
+        "Description": "Windows Server remote management",
+        "VpcId": "vpc-0a1b2c3d4e5f60001",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 3389,
+            "ToPort": 3389,
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "Insecure internet-facing RDP"
+              }
+            ],
+            "Ipv6Ranges": []
+          }
+        ]
+      },
+      {
+        "GroupId": "sg-0badf00d123456789",
+        "GroupName": "legacy-catchall-open-sg",
+        "Description": "Legacy catch-all test security group",
+        "VpcId": "vpc-0a1b2c3d4e5f60001",
+        "IpPermissions": [
+          {
+            "IpProtocol": "-1",
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "All inbound traffic open to internet"
+              }
+            ],
+            "Ipv6Ranges": [
+              {
+                "CidrIpv6": "::/0",
+                "Description": "All IPv6 traffic open"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "GroupId": "sg-0fedcba9876543210",
+        "GroupName": "internal-app-cluster-sg",
+        "Description": "Internal microservices VPC security group",
+        "VpcId": "vpc-0a1b2c3d4e5f60001",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "IpRanges": [
+              {
+                "CidrIp": "10.0.0.0/16",
+                "Description": "Internal VPC CIDR only"
+              }
+            ],
+            "Ipv6Ranges": []
+          }
+        ]
+      }
+    ],
+    "volumes": [
+      {
+        "VolumeId": "vol-0a1b2c3d4e5f6g7h8",
+        "Size": 120,
+        "Encrypted": false,
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1a",
+        "Attachments": [
+          {
+            "InstanceId": "i-0123456789abcdef0",
+            "Device": "/dev/xvda",
+            "State": "attached"
+          }
+        ]
+      },
+      {
+        "VolumeId": "vol-09876543210fedcba",
+        "Size": 250,
+        "Encrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:123456789012:key/c9876543-21ba-fedc-ba98-76543210fedc",
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1b",
+        "Attachments": [
+          {
+            "InstanceId": "i-0abcdef0123456789",
+            "Device": "/dev/xvdf",
+            "State": "attached"
+          }
+        ]
+      }
+    ]
+  },
+  "cloudtrail": {
+    "trails": [
+      {
+        "Name": "cloudguard-primary-audit-trail",
+        "S3BucketName": "cloudguard-secure-logs-vault",
+        "IncludeGlobalServiceEvents": true,
+        "IsMultiRegionTrail": true,
+        "HomeRegion": "ap-south-1",
+        "TrailARN": "arn:aws:cloudtrail:ap-south-1:123456789012:trail/cloudguard-primary-audit-trail",
+        "LogFileValidationEnabled": false,
+        "KmsKeyId": null,
+        "Status": {
+          "IsLogging": false,
+          "LatestDeliveryTime": "2024-05-10T14:20:00Z",
+          "StartLoggingTime": "2024-01-01T00:00:00Z",
+          "StopLoggingTime": "2024-05-10T15:00:00Z"
+        }
+      }
+    ]
+  },
+  "rds": {
+    "db_instances": [
+      {
+        "DBInstanceIdentifier": "cloudguard-billing-db",
+        "Engine": "mysql",
+        "DBInstanceStatus": "available",
+        "StorageEncrypted": false,
+        "AllocatedStorage": 100,
+        "Endpoint": {
+          "Address": "cloudguard-billing-db.c98765.ap-south-1.rds.amazonaws.com",
+          "Port": 3306
+        }
+      },
+      {
+        "DBInstanceIdentifier": "cloudguard-analytics-postgres",
+        "Engine": "postgres",
+        "DBInstanceStatus": "available",
+        "StorageEncrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:123456789012:key/d1234567-89ab-cdef-0123-456789abcdef",
+        "AllocatedStorage": 300,
+        "Endpoint": {
+          "Address": "cloudguard-analytics-postgres.c98765.ap-south-1.rds.amazonaws.com",
+          "Port": 5432
+        }
+      }
+    ]
+  }
+}

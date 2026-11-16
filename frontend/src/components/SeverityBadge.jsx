@@ -7,7 +7,8 @@ export function SeverityBadge({ severity }) {
     critical: { bg: '#fee2e2', text: '#991b1b', border: '#fecaca' },
     high: { bg: '#ffedd5', text: '#9a3412', border: '#fed7aa' },
     medium: { bg: '#fef3c7', text: '#92400e', border: '#fde68a' },
-    low: { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' }
+    low: { bg: '#f1f5f9', text: '#475569', border: '#e2e8f0' },
+    informational: { bg: '#e0f2fe', text: '#0369a1', border: '#bae6fd' }
   };
 
   const style = styles[sev] || styles.medium;
@@ -29,6 +30,36 @@ export function SeverityBadge({ severity }) {
       }}
     >
       {severity}
+    </span>
+  );
+}
+
+export function StatusBadge({ status }) {
+  const s = (status || 'FAILED').toUpperCase();
+  const styles = {
+    'FAILED': { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5' },
+    'PASSED': { bg: '#dcfce7', text: '#15803d', border: '#86efac' },
+    'WARNING': { bg: '#fef3c7', text: '#b45309', border: '#fcd34d' },
+    'NOT ASSESSED': { bg: '#f1f5f9', text: '#64748b', border: '#cbd5e1' }
+  };
+  const style = styles[s] || styles['FAILED'];
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '2px 8px',
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        backgroundColor: style.bg,
+        color: style.text,
+        border: `1px solid ${style.border}`,
+        letterSpacing: '0.025em'
+      }}
+    >
+      {status}
     </span>
   );
 }

@@ -958,6 +958,78 @@ CloudGuard's first version is complete only when all of these statements are tru
 
 ---
 
+## 20. CloudGuard Cloud Security Auditor Specification
+
+### 20.1 Purpose and Dual Capability
+CloudGuard provides dual security capabilities:
+1. **Source Code Secret Scanner:** Codebase analysis for exposed credentials.
+2. **Cloud Infrastructure Security Auditor:** AWS infrastructure configuration assessment for security misconfigurations and posture evaluation.
+
+### 20.2 AWS Integration & Cross-Account Access Model
+- **Mechanism:** AWS Security Token Service (STS) `AssumeRole`.
+- **Security Requirements:**
+  - Zero permanent access keys accepted or stored.
+  - Zero AWS secret credentials stored in the database.
+  - Read-only assessment: CloudGuard **never modifies, disables, or deletes** AWS resources.
+  - Least-privilege IAM permissions (`SecurityAudit` managed policy or scoped read-only policy).
+  - Temporary session credentials expire automatically in 900 seconds.
+  - Input validation: AWS Account IDs strictly matched to 12 numeric digits (`^\d{12}$`), Role ARNs matched to standard ARN format.
+
+### 20.3 Security Rules Engine Checks Implemented
+- **S3 Bucket Security:**
+  - Publicly accessible S3 buckets (policy with `Principal: *` and public ACLs).
+  - Incomplete/missing S3 Block Public Access (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`).
+  - Missing default server-side encryption (SSE-S3 / SSE-KMS).
+- **IAM Security:**
+  - Overly permissive administrative policies (`Action: *`, `Resource: *`).
+  - Direct attachment of `AdministratorAccess` to IAM users instead of role federation.
+  - Sensitive service wildcards (`iam:*`, `kms:*`, `sts:*`).
+  - Inline and managed policy analysis.
+- **Security Groups:**
+  - Inbound SSH (port 22) exposed to `0.0.0.0/0` or `::/0`.
+  - Inbound RDP (port 3389) exposed to `0.0.0.0/0` or `::/0`.
+  - Inbound unrestricted access on all ports (`Protocol: -1` or `0-65535`).
+  - Sensitive database ports (3306, 5432, 27017) exposed to `0.0.0.0/0`.
+- **CloudTrail:**
+  - Missing multi-region trail configuration.
+  - Trails with stopped logging (`IsLogging=False`).
+  - Log file integrity validation disabled.
+  - Missing KMS encryption.
+- **Storage Encryption:**
+  - Unencrypted EBS volumes at rest (`Encrypted=False`).
+  - Unencrypted RDS database storage (`StorageEncrypted=False`).
+
+### 20.4 Severity Classification & Security Scoring
+- **Severities:** `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`.
+- **Deduction Formula:**
+  $$\text{Cloud Security Score} = \max(0, 100 - \sum \text{Deductions})$$
+  - Critical: -30
+  - High: -15
+  - Medium: -7
+  - Low: -2
+- **Honest Incomplete Assessment Handling:**
+  - If permissions are missing (e.g. `AccessDenied` on `s3:ListAllMyBuckets` or `iam:ListUsers`), checks are marked **`NOT ASSESSED`**.
+  - Overall assessment coverage status is marked **`incomplete`** with explanatory notes in `coverage_notes`.
+  - CloudGuard never treats unassessed resources as secure.
+
+### 20.5 Local Simulation Mode
+- Mandatory demonstration mode requiring zero cloud credentials or costs.
+- Backed by multi-service JSON fixtures (`backend/app/cloud_security/fixtures/sample_aws_data.json`).
+- Runs the **exact same rules engine and scoring code**.
+- Distinctly labeled: `"DEMO / SIMULATED DATA — NOT LIVE AWS FINDINGS"`.
+
+### 20.6 REST API Endpoints
+- `POST /api/cloud-security/connect`
+- `POST /api/cloud-security/test-connection`
+- `POST /api/cloud-security/scan`
+- `POST /api/cloud-security/demo-scan`
+- `GET  /api/cloud-security/scan/<scan_id>`
+- `GET  /api/cloud-security/history`
+- `GET  /api/cloud-security/findings/<finding_id>`
+- `GET  /api/cloud-security/summary`
+
+---
+
 ## Final product statement
 
-**CloudGuard is a cloud-based secrets leakage detection application that scans uploaded source-code projects using a hybrid of rule-based techniques and a Random Forest machine-learning classifier. It evaluates likely exposed credentials, assigns risk severity, calculates a transparent security score, and presents masked findings with remediation guidance through a simple web dashboard, while using AWS for secure storage, deployment, access control, and monitoring.**
+**CloudGuard is a cloud-based secrets leakage detection and cloud security analysis system that combines source-code secret scanning (via rules, Shannon entropy, and Random Forest ML) with an AWS Cloud Infrastructure Security Auditor (via STS AssumeRole and local simulation mode), delivering unified risk scoring, masked evidence, and actionable remediation guidance through a web dashboard.**
