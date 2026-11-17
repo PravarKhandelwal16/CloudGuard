@@ -37,6 +37,7 @@ export function CloudSecurityPage() {
 
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const [simulationScenario, setSimulationScenario] = useState('hardened');
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionTestResult, setConnectionTestResult] = useState(null);
   const [error, setError] = useState('');
@@ -96,15 +97,16 @@ export function CloudSecurityPage() {
     }
   };
 
-  const handleRunDemoScan = async () => {
+  const handleRunDemoScan = async (selectedScenario) => {
+    const sc = typeof selectedScenario === 'string' ? selectedScenario : simulationScenario;
     setScanning(true);
     setError('');
     setSuccessMsg('');
     try {
-      const res = await api.runCloudDemoScan(connectionForm.region || 'ap-south-1');
+      const res = await api.runCloudDemoScan(sc, connectionForm.region || 'ap-south-1');
       setCurrentAssessment(res.data);
       setActiveTab('overview');
-      setSuccessMsg('Simulated cloud security audit completed successfully!');
+      setSuccessMsg(`Simulated cloud security audit completed: ${res.data?.simulation_scenario || sc}!`);
       // Refresh history
       const histRes = await api.listCloudHistory();
       setHistoryList(histRes.data || []);
@@ -224,15 +226,38 @@ export function CloudSecurityPage() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <select
+            value={simulationScenario}
+            onChange={(e) => {
+              setSimulationScenario(e.target.value);
+              handleRunDemoScan(e.target.value);
+            }}
+            disabled={scanning}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              fontSize: '0.85rem',
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer'
+            }}
+            title="Choose a simulated environment scenario"
+          >
+            <option value="hardened">🛡️ Hardened Production (Score: 91/100)</option>
+            <option value="compliant">✅ CIS Compliant (Score: 100/100)</option>
+            <option value="high_risk">⚠️ High-Risk Environment (Score: 0/100)</option>
+          </select>
+
           <button
             className="secondary-btn"
-            onClick={handleRunDemoScan}
+            onClick={() => handleRunDemoScan(simulationScenario)}
             disabled={scanning}
-            title="Run simulated audit with realistic sample AWS data"
+            title="Run simulated audit with selected scenario"
           >
             {scanning ? <div className="spinner-small" /> : <Play size={16} color="#2563eb" />}
-            <span>Run Demo Simulation</span>
+            <span>Run Simulation</span>
           </button>
 
           <button
@@ -416,7 +441,7 @@ export function CloudSecurityPage() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                          Account: {currentAssessment.account_id}
+                          {currentAssessment.simulation_scenario || `Account: ${currentAssessment.account_id}`}
                         </h2>
                         {currentAssessment.is_simulation ? (
                           <span style={{ fontSize: '0.75rem', fontWeight: 600, backgroundColor: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '4px' }}>
@@ -429,17 +454,38 @@ export function CloudSecurityPage() {
                         )}
                       </div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Region: <strong>{currentAssessment.region}</strong> • Coverage: <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>{currentAssessment.coverage_status}</span> • Duration: {currentAssessment.scan_duration_ms}ms
+                        Account: <strong>{currentAssessment.account_id}</strong> • Region: <strong>{currentAssessment.region}</strong> • Coverage: <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>{currentAssessment.coverage_status}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {currentAssessment.is_simulation ? (
-                      <button className="secondary-btn" onClick={handleRunDemoScan} disabled={scanning}>
-                        <RotateCw size={14} className={scanning ? 'spin' : ''} />
-                        <span>Re-run Simulation</span>
-                      </button>
+                      <>
+                        <select
+                          value={simulationScenario}
+                          onChange={(e) => {
+                            setSimulationScenario(e.target.value);
+                            handleRunDemoScan(e.target.value);
+                          }}
+                          disabled={scanning}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border)',
+                            fontSize: '0.82rem',
+                            backgroundColor: 'var(--bg-card)'
+                          }}
+                        >
+                          <option value="hardened">🛡️ Hardened (91)</option>
+                          <option value="compliant">✅ Compliant (100)</option>
+                          <option value="high_risk">⚠️ High-Risk (0)</option>
+                        </select>
+                        <button className="secondary-btn" onClick={() => handleRunDemoScan(simulationScenario)} disabled={scanning}>
+                          <RotateCw size={14} className={scanning ? 'spin' : ''} />
+                          <span>Re-run</span>
+                        </button>
+                      </>
                     ) : (
                       <button className="primary-btn" onClick={handleRunLiveScan} disabled={scanning}>
                         <RotateCw size={14} className={scanning ? 'spin' : ''} />

@@ -262,26 +262,45 @@ def run_demo_scan():
     """
     Execute simulation assessment using realistic JSON fixtures.
     Runs the exact same rules engine without requiring AWS credentials.
+    Supports multiple scenarios: 'high_risk' (score ~0), 'hardened' (score ~91), 'compliant' (score 100).
     """
+    from pathlib import Path
     data = request.get_json() or {}
     region = data.get("region", "ap-south-1").strip()
+    scenario = data.get("scenario", "high_risk").lower().strip()
+
+    fixtures_dir = Path(__file__).resolve().parent.parent / "cloud_security" / "fixtures"
+
+    if scenario in ("hardened", "secure", "good"):
+        fixture_path = str(fixtures_dir / "hardened_aws_data.json")
+        account_id = "987654321098"
+        scenario_title = "Hardened Production AWS Environment"
+    elif scenario in ("compliant", "perfect", "clean"):
+        fixture_path = str(fixtures_dir / "compliant_aws_data.json")
+        account_id = "112233445566"
+        scenario_title = "CIS Benchmark Compliant Baseline"
+    else:
+        fixture_path = str(fixtures_dir / "sample_aws_data.json")
+        account_id = "123456789012"
+        scenario_title = "Enterprise Multi-Service (High-Risk Demo)"
 
     auditor = CloudSecurityAuditor(
-        account_id="123456789012",
-        role_arn="arn:aws:iam::123456789012:role/CloudGuardAuditorRole",
+        account_id=account_id,
+        role_arn=f"arn:aws:iam::{account_id}:role/CloudGuardAuditorRole",
         region=region,
-        is_simulation=True
+        is_simulation=True,
+        simulation_fixture_path=fixture_path
     )
 
     try:
         audit_result = auditor.run_audit()
-        audit_result["simulation_scenario"] = "Enterprise Multi-Service Demo"
+        audit_result["simulation_scenario"] = scenario_title
 
         assessment = _persist_audit_result(g.current_user.id, audit_result)
 
         return jsonify({
             "success": True,
-            "message": "Local simulation cloud security assessment completed.",
+            "message": f"Simulation assessment completed ({scenario_title}).",
             "simulation_label": "DEMO / SIMULATED DATA — NOT LIVE AWS FINDINGS",
             "data": assessment.to_dict(include_findings=True)
         }), 201

@@ -368,6 +368,36 @@ def test_simulation_mode_executes_same_rules():
     assert any("Unencrypted EBS Volume" in t for t in titles)
 
 
+def test_hardened_and_compliant_simulation_scenarios():
+    from pathlib import Path
+    fixtures_dir = Path(__file__).resolve().parent.parent / "app" / "cloud_security" / "fixtures"
+
+    # 1. Hardened scenario: score ~91
+    hardened_auditor = CloudSecurityAuditor(
+        account_id="987654321098",
+        role_arn="arn:aws:iam::987654321098:role/CloudGuardAuditorRole",
+        is_simulation=True,
+        simulation_fixture_path=str(fixtures_dir / "hardened_aws_data.json")
+    )
+    hardened_res = hardened_auditor.run_audit()
+    assert hardened_res["security_score"] == 91
+    assert hardened_res["critical_count"] == 0
+    assert hardened_res["high_count"] == 0
+    assert hardened_res["checks_passed"] > 10
+
+    # 2. Compliant scenario: score 100
+    compliant_auditor = CloudSecurityAuditor(
+        account_id="112233445566",
+        role_arn="arn:aws:iam::112233445566:role/CloudGuardAuditorRole",
+        is_simulation=True,
+        simulation_fixture_path=str(fixtures_dir / "compliant_aws_data.json")
+    )
+    compliant_res = compliant_auditor.run_audit()
+    assert compliant_res["security_score"] == 100
+    assert compliant_res["critical_count"] == 0
+    assert compliant_res["checks_failed"] == 0
+
+
 # =====================================================================
 # 5. REST API Integration & Security Tests
 # =====================================================================

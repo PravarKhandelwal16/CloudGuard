@@ -1,0 +1,159 @@
+{
+  "scenario_metadata": {
+    "account_id": "112233445566",
+    "account_alias": "cloudguard-cis-compliant",
+    "region": "ap-south-1",
+    "role_arn": "arn:aws:iam::112233445566:role/CloudGuardAuditorRole",
+    "is_simulation": true,
+    "scenario_name": "compliant",
+    "description": "Fully Compliant CIS AWS Foundations Benchmark Baseline (Score: 100/100)"
+  },
+  "s3": {
+    "buckets": [
+      {
+        "Name": "cloudguard-production-data-vault",
+        "CreationDate": "2024-01-01T00:00:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": null,
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": {
+          "ServerSideEncryptionConfiguration": {
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "aws:kms",
+                  "KMSMasterKeyId": "arn:aws:kms:ap-south-1:112233445566:key/e1234567-89ab-cdef-0123-456789abcdef"
+                },
+                "BucketKeyEnabled": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "iam": {
+    "users": [
+      {
+        "UserName": "audit-reader",
+        "UserId": "AIDA112233445566EXAMPLE1",
+        "Arn": "arn:aws:iam::112233445566:user/audit-reader",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "SecurityAudit",
+            "PolicyArn": "arn:aws:iam::aws:policy/SecurityAudit"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "roles": [
+      {
+        "RoleName": "ApplicationWorkerRole",
+        "RoleId": "AROA112233445566EXAMPLE1",
+        "Arn": "arn:aws:iam::112233445566:role/ApplicationWorkerRole",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "AmazonSSMManagedInstanceCore",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "policies": []
+  },
+  "ec2": {
+    "security_groups": [
+      {
+        "GroupId": "sg-11223344556600001",
+        "GroupName": "strict-alb-sg",
+        "Description": "Strict HTTPS ingress only",
+        "VpcId": "vpc-11223344556677889",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "Public HTTPS"
+              }
+            ],
+            "Ipv6Ranges": [
+              {
+                "CidrIpv6": "::/0",
+                "Description": "IPv6 HTTPS"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "volumes": [
+      {
+        "VolumeId": "vol-11223344556600001",
+        "Size": 100,
+        "Encrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:112233445566:key/e1234567-89ab-cdef-0123-456789abcdef",
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1a",
+        "Attachments": [
+          {
+            "InstanceId": "i-11223344556600001",
+            "Device": "/dev/xvda",
+            "State": "attached"
+          }
+        ]
+      }
+    ]
+  },
+  "cloudtrail": {
+    "trails": [
+      {
+        "Name": "cis-benchmark-global-trail",
+        "S3BucketName": "cloudguard-production-data-vault",
+        "IncludeGlobalServiceEvents": true,
+        "IsMultiRegionTrail": true,
+        "HomeRegion": "ap-south-1",
+        "TrailARN": "arn:aws:cloudtrail:ap-south-1:112233445566:trail/cis-benchmark-global-trail",
+        "LogFileValidationEnabled": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:112233445566:key/e1234567-89ab-cdef-0123-456789abcdef",
+        "Status": {
+          "IsLogging": true,
+          "LatestDeliveryTime": "2024-11-17T05:00:00Z",
+          "StartLoggingTime": "2024-01-01T00:00:00Z"
+        }
+      }
+    ]
+  },
+  "rds": {
+    "db_instances": [
+      {
+        "DBInstanceIdentifier": "cis-compliant-aurora-db",
+        "Engine": "postgres",
+        "DBInstanceStatus": "available",
+        "StorageEncrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:112233445566:key/e1234567-89ab-cdef-0123-456789abcdef",
+        "AllocatedStorage": 100,
+        "Endpoint": {
+          "Address": "cis-compliant-aurora-db.c99999.ap-south-1.rds.amazonaws.com",
+          "Port": 5432
+        }
+      }
+    ]
+  }
+}

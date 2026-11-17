@@ -1,0 +1,352 @@
+{
+  "scenario_metadata": {
+    "account_id": "987654321098",
+    "account_alias": "cloudguard-hardened-prod",
+    "region": "ap-south-1",
+    "role_arn": "arn:aws:iam::987654321098:role/CloudGuardAuditorRole",
+    "is_simulation": true,
+    "scenario_name": "hardened",
+    "description": "Hardened Enterprise Production AWS Environment following CIS Benchmarks and AWS Well-Architected Security Baseline (Score: 91/100)"
+  },
+  "s3": {
+    "buckets": [
+      {
+        "Name": "cloudguard-app-assets-prod",
+        "CreationDate": "2024-01-15T09:00:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "EnforceTLSOnly",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                "arn:aws:s3:::cloudguard-app-assets-prod",
+                "arn:aws:s3:::cloudguard-app-assets-prod/*"
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        },
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": {
+          "ServerSideEncryptionConfiguration": {
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "AES256"
+                },
+                "BucketKeyEnabled": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "Name": "cloudguard-audit-logs-vault",
+        "CreationDate": "2024-02-10T11:00:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": null,
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": {
+          "ServerSideEncryptionConfiguration": {
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "aws:kms",
+                  "KMSMasterKeyId": "arn:aws:kms:ap-south-1:987654321098:key/a1234567-89ab-cdef-0123-456789abcdef"
+                },
+                "BucketKeyEnabled": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "Name": "cloudguard-database-backups",
+        "CreationDate": "2024-03-01T08:30:00Z",
+        "Region": "ap-south-1",
+        "PublicAccessBlock": {
+          "BlockPublicAcls": true,
+          "IgnorePublicAcls": true,
+          "BlockPublicPolicy": true,
+          "RestrictPublicBuckets": true
+        },
+        "PolicyStatus": {
+          "IsPublic": false
+        },
+        "Policy": null,
+        "Acl": {
+          "Grants": []
+        },
+        "Encryption": {
+          "ServerSideEncryptionConfiguration": {
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "aws:kms",
+                  "KMSMasterKeyId": "arn:aws:kms:ap-south-1:987654321098:key/b2345678-90ab-cdef-1234-567890abcdef"
+                },
+                "BucketKeyEnabled": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "iam": {
+    "users": [
+      {
+        "UserName": "developer-read-only",
+        "UserId": "AIDA987654321EXAMPLE1",
+        "Arn": "arn:aws:iam::987654321098:user/developer-read-only",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "ReadOnlyAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/ReadOnlyAccess"
+          }
+        ],
+        "InlinePolicies": []
+      },
+      {
+        "UserName": "ci-builder-service",
+        "UserId": "AIDA987654321EXAMPLE2",
+        "Arn": "arn:aws:iam::987654321098:user/ci-builder-service",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "ScopedS3BuildArtifactsPolicy",
+            "PolicyArn": "arn:aws:iam::987654321098:policy/ScopedS3BuildArtifactsPolicy"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "roles": [
+      {
+        "RoleName": "EC2ApplicationWorkerRole",
+        "RoleId": "AROA987654321EXAMPLE1",
+        "Arn": "arn:aws:iam::987654321098:role/EC2ApplicationWorkerRole",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "AmazonSSMManagedInstanceCore",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          }
+        ],
+        "InlinePolicies": []
+      },
+      {
+        "RoleName": "CloudGuardAuditorReadOnlyRole",
+        "RoleId": "AROA987654321EXAMPLE2",
+        "Arn": "arn:aws:iam::987654321098:role/CloudGuardAuditorReadOnlyRole",
+        "AttachedPolicies": [
+          {
+            "PolicyName": "SecurityAudit",
+            "PolicyArn": "arn:aws:iam::aws:policy/SecurityAudit"
+          }
+        ],
+        "InlinePolicies": []
+      }
+    ],
+    "policies": [
+      {
+        "PolicyName": "ScopedS3BuildArtifactsPolicy",
+        "PolicyArn": "arn:aws:iam::987654321098:policy/ScopedS3BuildArtifactsPolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              "Resource": "arn:aws:s3:::cloudguard-app-assets-prod/*"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "ec2": {
+    "security_groups": [
+      {
+        "GroupId": "sg-0a1b2c3d4e5f00001",
+        "GroupName": "prod-public-alb-sg",
+        "Description": "Production Application Load Balancer Security Group",
+        "VpcId": "vpc-0a1b2c3d4e5f99999",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "IpRanges": [
+              {
+                "CidrIp": "0.0.0.0/0",
+                "Description": "HTTPS public web traffic"
+              }
+            ],
+            "Ipv6Ranges": [
+              {
+                "CidrIpv6": "::/0",
+                "Description": "HTTPS IPv6"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "GroupId": "sg-0a1b2c3d4e5f00002",
+        "GroupName": "prod-internal-backend-sg",
+        "Description": "Internal microservices backend",
+        "VpcId": "vpc-0a1b2c3d4e5f99999",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "IpRanges": [
+              {
+                "CidrIp": "10.0.0.0/16",
+                "Description": "VPC CIDR only"
+              }
+            ],
+            "Ipv6Ranges": []
+          }
+        ]
+      },
+      {
+        "GroupId": "sg-0a1b2c3d4e5f00003",
+        "GroupName": "prod-aurora-database-sg",
+        "Description": "Private Aurora Postgres cluster",
+        "VpcId": "vpc-0a1b2c3d4e5f99999",
+        "IpPermissions": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "IpRanges": [
+              {
+                "CidrIp": "10.0.1.0/24",
+                "Description": "App private subnet only"
+              }
+            ],
+            "Ipv6Ranges": []
+          }
+        ]
+      }
+    ],
+    "volumes": [
+      {
+        "VolumeId": "vol-0123456789abcdef0",
+        "Size": 100,
+        "Encrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:987654321098:key/c3456789-01ab-cdef-2345-678901abcdef",
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1a",
+        "Attachments": [
+          {
+            "InstanceId": "i-09876543210abcdef",
+            "Device": "/dev/xvda",
+            "State": "attached"
+          }
+        ]
+      },
+      {
+        "VolumeId": "vol-0abcdef1234567890",
+        "Size": 250,
+        "Encrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:987654321098:key/c3456789-01ab-cdef-2345-678901abcdef",
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1b",
+        "Attachments": [
+          {
+            "InstanceId": "i-09876543210abcdef",
+            "Device": "/dev/xvdf",
+            "State": "attached"
+          }
+        ]
+      },
+      {
+        "VolumeId": "vol-0scratch99988877",
+        "Size": 20,
+        "Encrypted": false,
+        "State": "in-use",
+        "VolumeType": "gp3",
+        "AvailabilityZone": "ap-south-1a",
+        "Attachments": [
+          {
+            "InstanceId": "i-09876543210abcdef",
+            "Device": "/dev/xvdg",
+            "State": "attached"
+          }
+        ]
+      }
+    ]
+  },
+  "cloudtrail": {
+    "trails": [
+      {
+        "Name": "cloudguard-organization-audit-trail",
+        "S3BucketName": "cloudguard-audit-logs-vault",
+        "IncludeGlobalServiceEvents": true,
+        "IsMultiRegionTrail": true,
+        "HomeRegion": "ap-south-1",
+        "TrailARN": "arn:aws:cloudtrail:ap-south-1:987654321098:trail/cloudguard-organization-audit-trail",
+        "LogFileValidationEnabled": false,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:987654321098:key/a1234567-89ab-cdef-0123-456789abcdef",
+        "Status": {
+          "IsLogging": true,
+          "LatestDeliveryTime": "2024-11-17T05:00:00Z",
+          "StartLoggingTime": "2024-01-01T00:00:00Z"
+        }
+      }
+    ]
+  },
+  "rds": {
+    "db_instances": [
+      {
+        "DBInstanceIdentifier": "cloudguard-prod-postgres",
+        "Engine": "postgres",
+        "DBInstanceStatus": "available",
+        "StorageEncrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-south-1:987654321098:key/d4567890-12ab-cdef-3456-789012abcdef",
+        "AllocatedStorage": 200,
+        "Endpoint": {
+          "Address": "cloudguard-prod-postgres.c12345.ap-south-1.rds.amazonaws.com",
+          "Port": 5432
+        }
+      }
+    ]
+  }
+}

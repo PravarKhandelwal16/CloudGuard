@@ -66,8 +66,8 @@ export const api = {
     apiRequest('/cloud-security/test-connection', { method: 'POST', body: JSON.stringify(testData) }),
   runCloudScan: (scanParams) =>
     apiRequest('/cloud-security/scan', { method: 'POST', body: JSON.stringify(scanParams) }),
-  runCloudDemoScan: (region = 'ap-south-1') =>
-    apiRequest('/cloud-security/demo-scan', { method: 'POST', body: JSON.stringify({ region }) }),
+  runCloudDemoScan: (scenario = 'high_risk', region = 'ap-south-1') =>
+    apiRequest('/cloud-security/demo-scan', { method: 'POST', body: JSON.stringify({ scenario, region }) }),
   getCloudScan: (scanId) =>
     apiRequest(`/cloud-security/scan/${scanId}`, { method: 'GET' }),
   listCloudHistory: () =>
